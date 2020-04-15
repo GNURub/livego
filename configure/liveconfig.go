@@ -38,20 +38,20 @@ type JWT struct {
 	Algorithm string `mapstructure:"algorithm"`
 }
 type ServerCfg struct {
-	Level        string        `mapstructure:"level"`
-	ConfigFile   string        `mapstructure:"config_file"`
-	FLVDir       string        `mapstructure:"flv_dir"`
-	RTMPAddr     string        `mapstructure:"rtmp_addr"`
-	HTTPFLVAddr  string        `mapstructure:"httpflv_addr"`
-	HLSAddr      string        `mapstructure:"hls_addr"`
-	APIAddr      string        `mapstructure:"api_addr"`
-	RedisAddr    string        `mapstructure:"redis_addr"`
-	RedisPwd     string        `mapstructure:"redis_pwd"`
-	ReadTimeout  int           `mapstructure:"read_timeout"`
-	WriteTimeout int           `mapstructure:"write_timeout"`
-	GopNum       int           `mapstructure:"gop_num"`
-	JWT          JWT           `mapstructure:"jwt"`
-	Server       []Application `mapstructure:"server"`
+	Level        string       `mapstructure:"level"`
+	ConfigFile   string       `mapstructure:"config_file"`
+	FLVDir       string       `mapstructure:"flv_dir"`
+	RTMPAddr     string       `mapstructure:"rtmp_addr"`
+	HTTPFLVAddr  string       `mapstructure:"httpflv_addr"`
+	HLSAddr      string       `mapstructure:"hls_addr"`
+	APIAddr      string       `mapstructure:"api_addr"`
+	RedisAddr    string       `mapstructure:"redis_addr"`
+	RedisPwd     string       `mapstructure:"redis_pwd"`
+	ReadTimeout  int          `mapstructure:"read_timeout"`
+	WriteTimeout int          `mapstructure:"write_timeout"`
+	GopNum       int          `mapstructure:"gop_num"`
+	JWT          JWT          `mapstructure:"jwt"`
+	Server       Applications `mapstructure:"server"`
 }
 
 // default config
@@ -64,7 +64,7 @@ var defaultConf = ServerCfg{
 	WriteTimeout: 10,
 	ReadTimeout:  10,
 	GopNum:       1,
-	Server: []Application{{
+	Server: Applications{{
 		Appname:    "live",
 		Live:       true,
 		Hls:        true,
@@ -83,11 +83,6 @@ func initLog() {
 
 func LoadConfig() {
 	defer Init()
-
-	// Default config
-	b, _ := json.Marshal(defaultConf)
-	defaultConfig := bytes.NewReader(b)
-	Config.MergeConfig(defaultConfig)
 
 	// Flags
 	pflag.String("rtmp_addr", ":1935", "RTMP server listen address")
@@ -109,6 +104,13 @@ func LoadConfig() {
 	err := Config.ReadInConfig()
 	if err != nil {
 		log.Warning(err)
+
+		// Default config
+		b, _ := json.Marshal(defaultConf)
+		defaultConfig := bytes.NewReader(b)
+		Config.SetConfigType("json")
+		Config.MergeConfig(defaultConfig)
+
 		log.Info("Using default config")
 	}
 
